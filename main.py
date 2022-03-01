@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import random
 from sklearn.cluster import KMeans
-from util import time_test, the_world
+# from util import time_test, the_world
 from tqdm import tqdm
 import warnings
 import json
@@ -15,8 +15,8 @@ NEAR_DISTANCE = 100
 
 if_filter_color = 0
 filter_color = 19
-if_filter_img = 0
-filter_img = '61d410b38c549f0001c3dee4'
+if_filter_img = 1
+filter_img = '61e698d985bc0c00010f1260'
 
 
 def random_color_mapping():
@@ -40,14 +40,17 @@ def color_bar(colors):
 
 def get_origin_color_mapping(origin_region_img, origin_color_img):
     color_mapping = {}
+    # 最大最小区域编号;编号按照b和g通道的数字进行累加
     min_color, max_color = get_color_range(origin_region_img)
     # print()
     for color_type in tqdm(range(min_color, max_color + 1)):
+        # 用于测试
         if if_filter_color and color_type != filter_color:
             continue
         b_type = color_type % 256
         g_type = int(color_type / 256)
 
+        # mask表示当前分割区域
         color_img = np.copy(origin_color_img)
         region_img = np.copy(origin_region_img)
         mask = cv2.inRange(region_img, np.array([b_type, g_type, 0]), np.array([b_type, g_type, 0]))
@@ -238,36 +241,33 @@ def import_mapping():
     return color_mapping
 
 
-@time_test(True)
+# @time_test(True)
 def main():
-    for name, l, fl in os.walk('input'):
+    input_folder = 'example'
+    for name, l, fl in os.walk(input_folder):
         for id in l:
             if if_filter_img and id != filter_img:
                 continue
             if 'todo' in id:
                 continue
             print('dealing {}'.format(id))
-            color_file_name = 'input\\{}\\{}_colored.jpeg'.format(id, id)
-            regin_file_name = 'input\\{}\\{}_region.png'.format(id, id)
-            result_file_name = 'input\\{}\\{}_result.png'.format(id, id)
+            color_file_name = input_folder + '\\{}\\{}_colored.jpeg'.format(id, id)
+            regin_file_name = input_folder + '\\{}\\{}_region.png'.format(id, id)
             region_img = cv2.imread(regin_file_name)
             color_img = cv2.imread(color_file_name)
-            result_img = cv2.imread(result_file_name)
-
 
             # start_x = 1400
             # start_y = 0
             # region_img = region_img[start_x:start_x + 500, start_y:start_y + 500]
             # color_img = color_img[start_x:start_x + 500, start_y:start_y + 500]
-            # start_x = random.randint(0, 2048 - 500)
-            # start_y = random.randint(0, 2048 - 500)
-            # print(start_x, start_y)
-            # start_x = 839
-            # start_y = 850
-
+            # # start_x = random.randint(0, 2048 - 500)
+            # # start_y = random.randint(0, 2048 - 500)
+            # # print(start_x, start_y)
+            # # start_x = 839
+            # # start_y = 850
+            #
             # cv2.imwrite('output\\{}_region.png'.format(id), region_img)
-            # cv2.imwrite('output\\{}_0result.png'.format(id), result_img)
-            cv2.imwrite('output\\{}_colored.png'.format(id), color_img)
+            # cv2.imwrite('output\\{}_colored.png'.format(id), color_img)
             #
 
             color_mapping = get_origin_color_mapping(region_img, color_img)
