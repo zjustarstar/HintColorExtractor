@@ -15,7 +15,7 @@ CLUSTERS_NUM = 2  # Kmeans 函数的聚类数量
 # 以下四个参数仅供调试用
 if_filter_color = 0  # 若仅调试单独颜色，则赋值为1
 filter_color = 19  # 需调试的单独颜色
-if_filter_img = 1  # 若仅调试单张图片，则赋值为1
+if_filter_img = 0  # 若仅调试单张图片，则赋值为1
 filter_img = '61e698d985bc0c00010f1260'  # 需调试的单张图片id
 
 
