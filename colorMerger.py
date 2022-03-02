@@ -1,7 +1,6 @@
-import cv2
 import numpy as np
+import paramset
 from sklearn.cluster import KMeans
-import os
 
 
 # 两种颜色是否相近的判断标准
@@ -65,8 +64,6 @@ def combine_near_color(color_mapping, distance):
     return color_mapping
 
 
-
-
 def compute_colors_num(color_mapping):
     """
     此函数用于计算所有的颜色数量 colors_num, 和只存在一次的颜色数量 single_color_num
@@ -96,11 +93,11 @@ def compute_colors_num(color_mapping):
     return colors_num, single_color_num
 
 
-def final_merge(color_mapping, max_color_num=99):
+def final_merge(color_mapping, params):
     """
     此函数用于精简 color_mapping, 以使其达到 99 > 颜色数量 > 区域数*6% ,且 单一颜色数量 < 5 的要求
     :param color_mapping:
-    :param max_color_num: 最多有几种颜色
+    :param params: 合并时的参数
     :return: color_mapping:
     """
     # 求区块数量
@@ -111,8 +108,8 @@ def final_merge(color_mapping, max_color_num=99):
         colors.append(color_mapping[i])
 
     # 当颜色数大于最大值时, 将颜色列表输入 Kmeans 聚类, 每个颜色从聚类中选取最相近的颜色更新
-    if block_num > max_color_num:
-        clusters_num = 99
+    if block_num > params[paramset.MAX_COLORS_NUM]:
+        clusters_num = params[paramset.MAX_COLORS_NUM]
         kmeans = KMeans(n_clusters=clusters_num, random_state=0).fit(colors)
         classified_colors = np.array(kmeans.cluster_centers_, dtype=int)
         for i in color_mapping:
@@ -146,17 +143,17 @@ def final_merge(color_mapping, max_color_num=99):
 
     # 如果单一颜色数量大于5, 则作进一步处理
     # 1 设定一个 初始distance , 将颜色集合中rgb通道距离小于此distance的颜色合并
-    # 2 计算合并后的单一颜色数量, 若仍大于5, 则增大distance, 重复第1步
-    if len(single_color_mapping) > 5:
+    # 2 计算合并后的单一颜色数量, 若仍大于指定数值, 则增大distance, 重复第1步
+    one_region_clrnum = params[paramset.ONE_REGION_COLORS_NUM]
+    if len(single_color_mapping) > one_region_clrnum:
         short_distance = 30
         n = 0
         while 1:
             n += 1
             cn, scp = compute_colors_num(single_color_mapping)
-            if scp <= 5:
+            if scp <= one_region_clrnum:
                 break
             single_color_mapping = combine_near_color(single_color_mapping, short_distance)
-            # single_color_mapping = mergeColors(single_color_mapping, short_distance)
             short_distance += 5
 
         for i in single_color_mapping:

@@ -1,14 +1,15 @@
 import cv2
 import numpy as np
 import colorMerger
+import paramset
 from sklearn.cluster import KMeans
 from tqdm import tqdm
+import util_debug
 import warnings
 import os
 
 
-warnings.filterwarnings("ignore")
-CLUSTERS_NUM = 2  # Kmeans 函数的聚类数量
+# warnings.filterwarnings("ignore")
 
 # 以下参数仅供调试用
 if_filter_color = 0  # 若仅调试单独颜色，则赋值为1
@@ -68,7 +69,7 @@ def get_origin_color_mapping(origin_region_img, origin_color_img):
                 color_mapping[color_type] = [0, 0, 0]
         else:
             # 用Kmeans 处理colors ,将颜色聚类, 获取 CLUSTERS_NUM 种候选颜色
-            kmeans = KMeans(n_clusters=CLUSTERS_NUM, random_state=0).fit(colors)
+            kmeans = KMeans(n_clusters=paramset.COLOR_MAP_CLUSTER_NUM, random_state=0).fit(colors)
 
             # 处理聚类结果, 获取已分类颜色列表 classified_colors
             classified_colors = []
@@ -76,7 +77,7 @@ def get_origin_color_mapping(origin_region_img, origin_color_img):
                 classified_colors.append(i)
 
             # 如果颜色都可以合并, 则直接合并;
-            merged_colors = colorMerger.mergeColors_all(classified_colors, 20, True)
+            merged_colors = colorMerger.mergeColors_all(classified_colors, paramset.COLOR_DIST_THRE, True)
             # 只有一种颜色,直接赋值
             if len(merged_colors) == 1:
                 color_mapping[color_type] = merged_colors[0]
@@ -86,7 +87,7 @@ def get_origin_color_mapping(origin_region_img, origin_color_img):
 
             # classified_colors 输出测试
             if if_filter_color:
-                cv2.imwrite('output/color.png', color_bar(classified_colors))
+                cv2.imwrite('output/color.png', util_debug.color_bar(classified_colors))
 
             # 从 classified_colors 中选取占比最大的颜色
             max_range = 0
@@ -140,9 +141,10 @@ def get_color_range(img):
     return min_color, max_color
 
 
-def gen_hint_color_map(color_file_name, region_file_name, output_folder=''):
+def gen_hint_color_map(color_file_name, region_file_name, params, output_folder=''):
     '''
     输入要处理的彩色图及区域图，以及存放结果的输出文件夹
+    :param params: 算法参数
     :param color_file_name:
     :param region_file_name: 输入的彩色图和区域图
     :param output_folder: 存放结果的输出路径;如果为空，则放在原图所在的目录
@@ -167,7 +169,7 @@ def gen_hint_color_map(color_file_name, region_file_name, output_folder=''):
     # 区块数量
     block_num = len(color_mapping)
     # 精简颜色映射集合, 合并相近颜色
-    color_mapping = colorMerger.final_merge(color_mapping)
+    color_mapping = colorMerger.final_merge(color_mapping, params)
     # 获取颜色数和单个颜色数
     colors_num, single_color_num = colorMerger.compute_colors_num(color_mapping)
     # 生成文件名
