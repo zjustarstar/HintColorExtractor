@@ -1,5 +1,7 @@
 import numpy as np
 import json
+import time
+import math
 
 
 def color_bar(colors):
@@ -41,4 +43,25 @@ def import_mapping():
             color_mapping[int(i)] = content[i]
         fi.close()
     return color_mapping
+
+
+def show_run_time(display=True):
+    def run(func):
+        def decorated(*args, **kwargs):
+            tstart = time.time()
+            res = func(*args, **kwargs)
+            tend = time.time()
+
+            timespan = tend - tstart
+            hour = math.floor(timespan / 3600)
+            m = math.floor((timespan - hour * 3600) / 60)
+            sec = math.floor(timespan - hour * 3600 - m * 60)
+
+            if display:
+                print("耗时:%d时%d分%d秒" % (hour, m, sec))
+            return res
+
+        return decorated
+    return run
+
 

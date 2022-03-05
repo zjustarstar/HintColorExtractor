@@ -141,22 +141,29 @@ def get_color_range(img):
     return min_color, max_color
 
 
-def gen_hint_color_map(color_file_name, region_file_name, params, output_folder=''):
+def gen_hint_color_map(color_file_name, region_file_name, params):
     '''
     输入要处理的彩色图及区域图，以及存放结果的输出文件夹
     :param params: 算法参数
     :param color_file_name:
     :param region_file_name: 输入的彩色图和区域图
-    :param output_folder: 存放结果的输出路径;如果为空，则放在原图所在的目录
     :return:
     '''
+    print("currently process {0}".format(color_file_name))
+
+    output_folder = params[paramset.OUTPUT_PATH]
     filepath, tempfilename = os.path.split(color_file_name)
     filename, extension = os.path.splitext(tempfilename)
     fileid = filename[0:filename.find('_')]
 
-    print('dealing {}'.format(color_file_name))
     region_img = cv2.imread(region_file_name)
     color_img = cv2.imread(color_file_name)
+    if region_img is None:
+        print("fail to read region image")
+        return False
+    if color_img is None:
+        print("fail to read color image")
+        return False
 
     color_mapping = get_origin_color_mapping(region_img, color_img)
 
@@ -184,3 +191,21 @@ def gen_hint_color_map(color_file_name, region_file_name, params, output_folder=
     else:
         cv2.imwrite('{}\\{}_{}.png'.format(output_folder, fileid, add_name), res_img)
 
+    return True
+
+
+
+def gen_hint_color_map_async(color_file_names, region_file_names, params, fileid):
+    '''
+    输入要处理的彩色图及区域图，以及存放结果的输出文件夹。多线程版本
+    :param params: 算法参数
+    :param color_file_name:
+    :param region_file_name: 输入的彩色图列表和区域图列表
+    :param fileid: 当前处理的文件index
+    :return:
+    '''
+
+    color_file_name = color_file_names[fileid]
+    region_file_name = region_file_names[fileid]
+
+    return gen_hint_color_map(color_file_name, region_file_name, params)
