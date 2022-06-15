@@ -68,6 +68,19 @@ def get_origin_color_mapping(origin_region_img, origin_color_img):
             else:
                 color_mapping[color_type] = [0, 0, 0]
         else:
+            # # 查看方差;
+            # v = np.sqrt(np.array(colors).var())
+            # # 如果该区域中的颜色都非常接近,不用再做kmeans
+            # if v < paramset.COLOR_DIST_THRE:
+            #     mean_color = np.mean(np.array(colors), axis=0)
+            #     color_mapping[color_type] = (mean_color + 0.5).astype('uint8')
+            #     continue
+            # 如果colors只有一种颜色,直接返回.
+            reture_arr, uniq_cnt = np.unique(colors, axis=0, return_counts=True)
+            if reture_arr.shape[0] == 1:
+                color_mapping[color_type] = reture_arr[0]
+                continue
+
             # 用Kmeans 处理colors ,将颜色聚类, 获取 CLUSTERS_NUM 种候选颜色
             kmeans = KMeans(n_clusters=paramset.COLOR_MAP_CLUSTER_NUM, random_state=0).fit(colors)
 
@@ -163,6 +176,10 @@ def gen_hint_color_map(color_file_name, region_file_name, params):
         return False
     if color_img is None:
         print("fail to read color image")
+        return False
+    # 如果两张图分辨率不同
+    if not region_img.shape == color_img.shape:
+        print("region image size is not equal to color image size")
         return False
 
     color_mapping = get_origin_color_mapping(region_img, color_img)
